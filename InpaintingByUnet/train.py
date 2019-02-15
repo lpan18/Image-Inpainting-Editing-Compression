@@ -19,12 +19,12 @@ from dataloader import DataLoader
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-WILL_TRAIN = False
-WILL_TEST = True
+WILL_TRAIN = True
+WILL_TEST = False
 
 def train_net(net,
               epochs=3,
-              data_dir='data/cells/',
+              data_dir='inpainting_set/',
               n_classes=2,
               lr=0.1,
               val_percent=0.1,
@@ -78,8 +78,8 @@ def train_net(net,
 # displays test images with original and predicted masks 
 def test_net(testNet, 
             gpu=False,
-            data_dir='data/cells/'):
-    net_folder = 'checkpoints/'
+            data_dir='inpainting_set/'):
+    net_folder = ''
     net_name = 'CP30'
     state_dict = torch.load(data_dir + net_folder + net_name + '.pth')
     testNet.load_state_dict(state_dict)
@@ -159,7 +159,7 @@ def get_args():
     parser = OptionParser()
     parser.add_option('-e', '--epochs', dest='epochs', default=3, type='int', help='number of epochs')
     parser.add_option('-c', '--n-classes', dest='n_classes', default=2, type='int', help='number of classes')
-    parser.add_option('-d', '--data-dir', dest='data_dir', default='data/cells/', help='data directory')
+    parser.add_option('-d', '--data-dir', dest='data_dir', default='inpainting_set/', help='data directory')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=False, help='use cuda')
     parser.add_option('-l', '--load', dest='load', default=False, help='load file model')
 
