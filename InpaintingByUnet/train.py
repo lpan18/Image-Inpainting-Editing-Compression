@@ -32,12 +32,12 @@ def train_net(net,
               gpu=True):
     train_list = []
     train_path = join(data_dir, 'train.png')
-    for i in range(batch_size):
+    for i in range(320):
         train_list.append(train_path)
     train_dataset = DataLoader(train_list)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)    
+    print('Total training items', len(train_dataset), ', Total training mini-batches in one epoch:', len(train_loader))
 
-    N_train = train_dataset.__len__()
     optimizer = optim.SGD(net.parameters(),
                             lr=lr,
                             momentum=0.99,
@@ -61,7 +61,7 @@ def train_net(net,
             criterion = nn.MSELoss()
             loss = criterion(pred_label, label)
             epoch_loss += loss.item()
-            print('Training sample %d / %d - Loss: %.6f' % (i+1, N_train, loss.item()))
+            print('Epoch: %d Itr: %d - Loss: %.6f' % (epoch, i+1, loss.item()))
             
             # optimize weights
             loss.backward()
@@ -81,23 +81,26 @@ def train_net(net,
         # test_net(testNet=net, epoch = epoch, batch_size=1, gpu=args.gpu, data_dir=args.data_dir)
         
         # save net 
-        if((epoch + 1) % 10 == 0) :   
+        if((epoch + 1) % 20 == 0) :   
             torch.save(net.state_dict(), join(data_dir, 'checkpoints/') + 'CP%d.pth' % (epoch + 1))
             print('Checkpoint %d saved !' % (epoch + 1))
         print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / (i+1)))
 
 # displays test images with original and predicted masks 
 def test_net(testNet, 
-            epoch = 0,
-            batch_size = 1,
+            epoch,
+            batch_size,
             gpu=True,
             data_dir='data/'):
     test_list = []
     test_path = join(data_dir, 'test.png')
-    for i in range(batch_size):
+    test_num = 5
+    for i in range(test_num):
         test_list.append(test_path)
     test_dataset = DataLoader(test_list)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+    print('Total testing items', len(test_dataset), ', Total testing mini-batches in one epoch:', len(test_loader))
+
     testNet.eval()
     # Open accuracy file
     # f = open(data_dir + net_folder + 'accuracy.txt', 'a')
@@ -113,9 +116,9 @@ def test_net(testNet,
             path = join(data_dir, 'samples/')
 
             # save test_groundtruth, test_input, test_output
-            save_img(label, path, epoch, 'test_gt.png')
-            save_img(test_input, path, epoch, 'test_in.png')
-            save_img(test_output, path, epoch, 'test_out.png')
+            save_img(label, path, i, 'test_gt.png')
+            save_img(test_input, path, i, 'test_in.png')
+            save_img(test_output, path, i, 'test_out.png')
 
             # compute accuracy and write to file
             # N = label.shape[0] * label.shape[1]
@@ -162,12 +165,12 @@ if __name__ == '__main__':
     if WILL_TEST:
         testNet = UNet()
         net_folder = 'checkpoints/'
-        net_name = 'CP1'
+        net_name = 'CP80'
         state_dict = torch.load('data/' + net_folder + net_name + '.pth')
         testNet.load_state_dict(state_dict)
         testNet.cuda()
         test_net(testNet=testNet, 
-            epoch = 0,
+            epoch=0,
             batch_size=1,
             gpu=args.gpu,
             data_dir=args.data_dir)
