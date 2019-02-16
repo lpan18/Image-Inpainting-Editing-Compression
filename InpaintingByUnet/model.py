@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class UNet(nn.Module):
-    def __init__(self, n_classes):
+    def __init__(self, inC = 4, outC = 3):
         super(UNet, self).__init__()
         # todo
         # Hint: Do not use ReLU in last convolutional set of up-path (128-64-64) for stability reasons!
-        self.conv1 = double_conv(1, 64)
+        self.conv1 = double_conv(inC, 64)
         self.conv2 = downStep(64, 128)
         self.conv3 = downStep(128, 256)
         self.conv4 = downStep(256, 512)
@@ -16,7 +16,7 @@ class UNet(nn.Module):
         self.conv7 = upStep(512, 256)
         self.conv8 = upStep(256, 128)
         self.conv9 = upStep(128, 64, withReLU=False)
-        self.conv10 = nn.Conv2d(64, n_classes, kernel_size = 1)  # last convolutional layer 
+        self.conv10 = nn.Conv2d(64, outC, kernel_size = 1)  # last convolutional layer 
         self.sigmoid1 = nn.Sigmoid()
 
     def forward(self, x):
@@ -32,17 +32,6 @@ class UNet(nn.Module):
         x9 = self.conv9(x8,x1)
         x10 = self.conv10(x9)
         x = self.sigmoid1(x10)
-        print("x1",x1.shape)
-        print("x2",x2.shape)
-        print("x3",x3.shape)
-        print("x4",x4.shape)
-        print("x5",x5.shape)
-        print("x6",x6.shape)
-        print("x7",x7.shape)
-        print("x8",x8.shape)
-        print("x9",x9.shape)
-        print("x10",x10.shape)
-        print("x",x.shape)
         return x
 
 class downStep(nn.Module):

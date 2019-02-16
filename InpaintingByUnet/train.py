@@ -23,17 +23,21 @@ WILL_TRAIN = True
 WILL_TEST = False
 
 def train_net(net,
-              epochs=3,
-              data_dir='inpainting_set/',
-              n_classes=2,
+              epochs = 3,
+              batch_size = 16,
+              data_dir='data/',
               lr=0.1,
               val_percent=0.1,
               save_cp=True,
-              gpu=False):
-    loader = DataLoader(data_dir)
+              gpu=True):
+    train_list = []
+    train_path = join(data_dir, 'train.png')
+    for i in range(batch_size):
+        train_list.append(train_path)
+    train_dataset = DataLoader(train_list)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
 
-    N_train = loader.n_train()
- 
+    N_train = train_dataset.__len__()
     optimizer = optim.SGD(net.parameters(),
                             lr=lr,
                             momentum=0.99,
@@ -43,133 +47,102 @@ def train_net(net,
         print('Epoch %d/%d' % (epoch + 1, epochs))
         print('Training...')
         net.train()
-        loader.setMode('train')
-
         epoch_loss = 0
 
-        for i, (img, label) in enumerate(loader):
-            shape = img.shape
-            label = label - 1
-            # todo: create image tensor: (N,C,H,W) - (batch size=1,channels=1,height,width)
-            img_torch = torch.from_numpy(img.reshape(1,1,shape[0],shape[1])).float()
-
+        for i, (img, label) in enumerate(train_loader):
             # todo: load image tensor to gpu
             if gpu:
-                img_torch = Variable(img_torch.cuda())
+                img = Variable(img.cuda())
+                label = label.cuda()
             optimizer.zero_grad()
-            # todo: get prediction and getLoss()
-            pred_label = net(img_torch)
-            target_label = torch.from_numpy(label).float()
             
-            loss = getLoss(pred_label, target_label)
+            # todo: get prediction and loss
+            pred_label = net(img)            
+            criterion = nn.MSELoss()
+            loss = criterion(pred_label, label)
             epoch_loss += loss.item()
- 
             print('Training sample %d / %d - Loss: %.6f' % (i+1, N_train, loss.item()))
-
+            
             # optimize weights
             loss.backward()
             optimizer.step()
+            
+        # save train results
+        # label = label.cpu().detach()
+        # mask = img.cpu().detach()[:,3:4,:,:]
+        # train_input = (label - label * (1 - mask))
+        # train_output = pred_label.cpu().detach()
+        # path = join(data_dir, 'samples/')
+        # save_img(label, path, epoch, 'train_gt.png')
+        # save_img(train_input, path, epoch, 'train_in.png')
+        # save_img(train_output, path, epoch, 'train_out.png')
 
-        if((epoch + 1) % 3 == 0) :   
-            torch.save(net.state_dict(), join(data_dir, 'checkpoints') + '/CP%d.pth' % (epoch + 1))
+        # perform test and save test results
+        # test_net(testNet=net, epoch = epoch, batch_size=1, gpu=args.gpu, data_dir=args.data_dir)
+        
+        # save net 
+        if((epoch + 1) % 10 == 0) :   
+            torch.save(net.state_dict(), join(data_dir, 'checkpoints/') + 'CP%d.pth' % (epoch + 1))
             print('Checkpoint %d saved !' % (epoch + 1))
-        print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / i))
+        print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / (i+1)))
 
 # displays test images with original and predicted masks 
 def test_net(testNet, 
-            gpu=False,
-            data_dir='inpainting_set/'):
-    net_folder = ''
-    net_name = 'CP30'
-    state_dict = torch.load(data_dir + net_folder + net_name + '.pth')
-    testNet.load_state_dict(state_dict)
-    testNet.cuda()
-    loader = DataLoader(data_dir)
-    loader.setMode('test')
+            epoch = 0,
+            batch_size = 1,
+            gpu=True,
+            data_dir='data/'):
+    test_list = []
+    test_path = join(data_dir, 'test.png')
+    for i in range(batch_size):
+        test_list.append(test_path)
+    test_dataset = DataLoader(test_list)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
     testNet.eval()
     # Open accuracy file
     # f = open(data_dir + net_folder + 'accuracy.txt', 'a')
     # f.write(net_name+'\n')
     with torch.no_grad():
-        for i, (img, label) in enumerate(loader):
-            shape = img.shape
-            img_torch = torch.from_numpy(img.reshape(1,1,shape[0],shape[1])).float()
+        for i, (img, label) in enumerate(test_loader):
             if gpu:
-                img_torch = img_torch.cuda()
-            pred = testNet(img_torch)
-            pred_sm = softmax(pred)
-            _,pred_label = torch.max(pred_sm,1)
-            startY = (img.shape[0] - pred_label.shape[1])//2
-            startX = (img.shape[1] - pred_label.shape[2])//2
-            img = img[startY:startY+pred_label.shape[1] ,startX:startX+pred_label.shape[2]]
-            label = label[startY:startY+pred_label.shape[1] ,startX:startX+pred_label.shape[2]]
-            
-            label = (label - 1)*255.
-            pred_label = pred_label.cpu().detach().numpy().squeeze()*255.
+                img = Variable(img.cuda())
+            pred_label = testNet(img)          
+            mask = img.cpu().detach()[:,3:4,:,:]
+            test_input = (label - label * (1 - mask))
+            test_output = pred_label.cpu().detach()
+            path = join(data_dir, 'samples/')
+
+            # save test_groundtruth, test_input, test_output
+            save_img(label, path, epoch, 'test_gt.png')
+            save_img(test_input, path, epoch, 'test_in.png')
+            save_img(test_output, path, epoch, 'test_out.png')
+
             # compute accuracy and write to file
             # N = label.shape[0] * label.shape[1]
             # accuracy = np.sum(label == pred_label) / N
             # f.write(str(i) + ' ' + str(accuracy) + '\n')                
-            plt.subplot(1, 3, 1)
-            plt.imshow(img*255.)
-            plt.subplot(1, 3, 2)
-            plt.imshow(label)
-            plt.subplot(1, 3, 3)
-            plt.imshow(pred_label)
-            plt.show()
-            # save the predicted results
-            # plt.savefig(data_dir + net_folder + net_name + '_%d.png' % i )
-            plt.close()
         # f.close()
-def getLoss(pred_label, target_label):
-    p = softmax(pred_label)
-    return cross_entropy(p, target_label)
 
-def softmax(input):
-    # todo: implement softmax function
-    p = torch.exp(input.float()) / torch.sum(torch.exp(input.float()), 1)
-    # p1 = F.softmax(input.float(), 1)
-    return p
-
-def cross_entropy(input, targets):
-    # todo: implement cross entropy
-    # Hint: use the choose function
-    # using pad to crop targets
-    pad_y = input.shape[2] - targets.shape[0] 
-    pad_x = input.shape[3] - targets.shape[1]
-    targets = F.pad(targets, pad=(pad_x // 2, pad_x - pad_x // 2, pad_y // 2, pad_y - pad_y // 2))
-    pred = choose(input, targets)
-    ce = torch.mean(-torch.log(pred))
-    # ce = F.cross_entropy(input.contiguous().view(-1,2), targets.contiguous().view(-1).long())
-    return ce
-
-# Workaround to use numpy.choose() with PyTorch
-def choose(pred_label, true_labels):
-    size = pred_label.size()
-    ind = np.empty([size[2]*size[3],3], dtype=int)
-    i = 0
-    for x in range(size[2]):
-        for y in range(size[3]):
-            ind[i,:] = [true_labels[x,y], x, y]
-            i += 1
-    pred = pred_label[0,ind[:,0],ind[:,1],ind[:,2]].view(size[2],size[3])
-    return pred
-    
 def get_args():
     parser = OptionParser()
     parser.add_option('-e', '--epochs', dest='epochs', default=3, type='int', help='number of epochs')
-    parser.add_option('-c', '--n-classes', dest='n_classes', default=2, type='int', help='number of classes')
-    parser.add_option('-d', '--data-dir', dest='data_dir', default='inpainting_set/', help='data directory')
-    parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=False, help='use cuda')
+    parser.add_option('-b', '--batch-size', dest='batch_size', default=16, type='int', help='batch size')
+    parser.add_option('-d', '--data-dir', dest='data_dir', default='data/', help='data directory')
+    parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')
     parser.add_option('-l', '--load', dest='load', default=False, help='load file model')
 
     (options, args) = parser.parse_args()
     return options
 
+def save_img(image, path, epoch, image_name):
+    plt.imshow(image[0].permute(1,2,0).numpy())
+    plt.savefig(path + '%d_' % (epoch + 1) + image_name)
+    plt.close()
+
 if __name__ == '__main__':
     args = get_args()
 
-    net = UNet(n_classes=args.n_classes)
+    net = UNet()
 
     if args.load:
         net.load_state_dict(torch.load(args.load))
@@ -181,13 +154,20 @@ if __name__ == '__main__':
 
     if WILL_TRAIN:
         train_net(net=net,
+            batch_size=args.batch_size,
             epochs=args.epochs,
-            n_classes=args.n_classes,
             gpu=args.gpu,
             data_dir=args.data_dir)
 
     if WILL_TEST:
-        testNet = UNet(n_classes=args.n_classes)
+        testNet = UNet()
+        net_folder = 'checkpoints/'
+        net_name = 'CP1'
+        state_dict = torch.load('data/' + net_folder + net_name + '.pth')
+        testNet.load_state_dict(state_dict)
+        testNet.cuda()
         test_net(testNet=testNet, 
+            epoch = 0,
+            batch_size=1,
             gpu=args.gpu,
             data_dir=args.data_dir)

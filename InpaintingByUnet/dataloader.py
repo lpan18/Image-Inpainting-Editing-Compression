@@ -2,26 +2,25 @@ import os
 from os.path import isdir, exists, abspath, join
 import torch
 import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
 import random
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
-class DataLoader():
-    def __init__(self, root_dir='inpainting_set', batch_size=16):
-        self.mode = 'train'
-        self.batch_size = batch_size
-        self.root_dir = abspath(root_dir)
-        self.train_file = join(self.root_dir, 'train.png')
-        self.test_file = join(self.root_dir, 'test.png')
-        self.data_file = self.train_file
-
-    def __iter__(self):
-        if self.mode == 'test':
-            self.data_file = self.test_file
+class DataLoader(Dataset):
+    def __init__(self, dataset_list):
+        self.dataset_list = dataset_list
+    
+    def __len__(self):
+        return len(self.dataset_list)    
+    
+    def __getitem__(self, idx):
         # load images
-        data_image = Image.open(self.data_file)
-        
+        img_path = self.dataset_list[idx]
+        data_image = Image.open(img_path)
+
         # data augmentation
         resized_size = 128
         transform = transforms.Compose([
@@ -30,26 +29,16 @@ class DataLoader():
             transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
             transforms.RandomRotation((-90, 90)),
             transforms.RandomResizedCrop(resized_size),
-            transforms.ToTensor(),
-            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            transforms.ToTensor()   # transforms the image to a tensor with range [0,1].
         ])
+        trsf_image = transform(data_image)
+        mask = self.__generateMask(trsf_image.shape)
+        input_image = torch.cat((trsf_image, mask), 0).float()
+        gt_label = trsf_image.float()
+        return (input_image, gt_label)
         
-        input_image = torch.zeros(self.batch_size, 4, resized_size, resized_size)
-        gt_label = torch.zeros(self.batch_size, 3, resized_size, resized_size)
-
-        for i in range(self.batch_size):
-            print("in loader", i)
-            trsf_image = transform(data_image)
-            mask = self.__generateMask(trsf_image.shape)
-            input_image[i] = torch.cat((trsf_image, mask), 0)
-            gt_label[i] = trsf_image
-            yield (input_image, gt_label)
-        
-    def setMode(self, mode):
-        self.mode = mode
-
     def __generateMask(self, shape, n_holes = 5):
-        mask = torch.zeros(1,shape[1],shape[2])
+        mask = torch.ones(1,shape[1],shape[2])
         _, mask_h, mask_w = mask.shape
         masks = []
         for i in range(n_holes):
@@ -63,17 +52,25 @@ class DataLoader():
             # offset_y = random.randint(0, mask_h - hole_h)
             offset_x = random.randint(1, mask_w - hole_w - 1) # rectangle not blurry on the boundary
             offset_y = random.randint(1, mask_h - hole_h - 1)
-            mask[:, offset_y : offset_y + hole_h, offset_x : offset_x + hole_w] = 1.0
+            mask[:, offset_y : offset_y + hole_h, offset_x : offset_x + hole_w] = 0
         return mask
 
-# Test dataloader
-loader = DataLoader()
-for i, (img, label) in enumerate(loader):
-    print("in test", i)
-    figs, axes = plt.subplots(1, 2)
-    axes[0].imshow(label[5].permute(1,2,0).numpy())
-    axes[1].imshow(label[10].permute(1,2,0).numpy())
-    plt.show()
-    if(i==5): 
-        break
-
+#Test dataloader
+# data_dir = 'data/train.png'
+# dataset_list = []
+# for i in range(16):
+#     dataset_list.append(data_dir)
+# train_dataset = DataLoader(dataset_list)
+# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=False, num_workers=0)
+# for i, (img, label) in enumerate(train_loader):
+#     figs, axes = plt.subplots(1, 2)
+#     img_sliced = img[:,0:3,:,:]
+#     mask_sliced = img[:,3:4,:,:]
+#     img_mask = img_sliced - img_sliced * (1 - mask_sliced)
+#     axes[0].imshow(img_mask[0].permute(1,2,0).numpy())  # show img with mask
+#     # axes[0].imshow(img_sliced[0].permute(1,2,0).numpy()) # show first 3 channel
+#     # axes[0].imshow(mask_sliced[0].squeeze(0).numpy(), cmap=cm.gray) # show mask channel
+#     # axes[0].imshow(img[0].squeeze(0).numpy())
+#     axes[1].imshow(label[0].permute(1,2,0).numpy())
+#     plt.show()
+#     break
