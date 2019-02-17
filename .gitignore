@@ -1,4 +1,6 @@
-InpaintingByUnet/__pycache__/
-InpaintingByUnet/data
-InpaintingByResnet/__pycache__/
-InpaintingByResnet/data
+__pycache__/
+data/
+**/img_s.bmp
+**/mask_s.bmp
+**/output.png
+**/test.m

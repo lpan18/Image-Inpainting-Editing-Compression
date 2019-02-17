@@ -19,15 +19,14 @@ from dataloader import DataLoader
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-WILL_TRAIN = True
-WILL_TEST = False
+WILL_TRAIN = False
+WILL_TEST = True
 
 def train_net(net,
               epochs = 3,
               batch_size = 16,
               data_dir='data/',
-              lr=0.1,
-              val_percent=0.1,
+              lr=0.001,
               save_cp=True,
               gpu=True):
     train_list = []
@@ -81,7 +80,7 @@ def train_net(net,
         # test_net(testNet=net, epoch = epoch, batch_size=1, gpu=args.gpu, data_dir=args.data_dir)
         
         # save net 
-        if((epoch + 1) % 20 == 0) :   
+        if((epoch + 1) % 10 == 0) :   
             torch.save(net.state_dict(), join(data_dir, 'checkpoints/') + 'CP%d.pth' % (epoch + 1))
             print('Checkpoint %d saved !' % (epoch + 1))
         print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / (i+1)))
@@ -94,7 +93,7 @@ def test_net(testNet,
             data_dir='data/'):
     test_list = []
     test_path = join(data_dir, 'test.png')
-    test_num = 5
+    test_num = 1
     for i in range(test_num):
         test_list.append(test_path)
     test_dataset = DataLoader(test_list)
@@ -116,9 +115,9 @@ def test_net(testNet,
             path = join(data_dir, 'samples/')
 
             # save test_groundtruth, test_input, test_output
-            save_img(label, path, i, 'test_gt.png')
-            save_img(test_input, path, i, 'test_in.png')
-            save_img(test_output, path, i, 'test_out.png')
+            save_img(label, path, epoch, 'test_gt.png')
+            save_img(test_input, path, epoch, 'test_in.png')
+            save_img(test_output, path, epoch, 'test_out.png')
 
             # compute accuracy and write to file
             # N = label.shape[0] * label.shape[1]
@@ -165,12 +164,12 @@ if __name__ == '__main__':
     if WILL_TEST:
         testNet = ResNet()
         net_folder = 'checkpoints/'
-        net_name = 'CP80'
+        net_name = 'CP10'
         state_dict = torch.load('data/' + net_folder + net_name + '.pth')
         testNet.load_state_dict(state_dict)
         testNet.cuda()
         test_net(testNet=testNet, 
-            epoch=0,
+            epoch=10,
             batch_size=1,
             gpu=args.gpu,
             data_dir=args.data_dir)

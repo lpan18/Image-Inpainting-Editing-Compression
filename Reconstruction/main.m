@@ -29,7 +29,7 @@ V(1:imh*imw) = 1:imh*imw;
 
 %TODO: solve the equation
 %use "lscov" or "\", please google the matlab documents
-solution = ???
+solution = A\b
 error = sum(abs(A*solution-b));
 disp(error)
 imgout = reshape(solution,[imh,imw]);
