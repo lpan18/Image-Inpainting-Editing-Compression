@@ -19,8 +19,8 @@ from dataloader import DataLoader
 from torch.autograd import Variable
 import torch.nn.functional as F
 
-WILL_TRAIN = False
-WILL_TEST = True
+WILL_TRAIN = True
+WILL_TEST = False
 
 def train_net(net,
               epochs = 3,
@@ -31,7 +31,7 @@ def train_net(net,
               gpu=True):
     train_list = []
     train_path = join(data_dir, 'train.png')
-    for i in range(320):
+    for i in range(batch_size*100):
         train_list.append(train_path)
     train_dataset = DataLoader(train_list)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)    
@@ -42,8 +42,8 @@ def train_net(net,
                             momentum=0.99,
                             weight_decay=0.005)
 
-    for epoch in range(epochs):
-        print('Epoch %d/%d' % (epoch + 1, epochs))
+    for epoch in range(1, epochs+1):
+        print('Epoch %d/%d' % (epoch, epochs))
         print('Training...')
         net.train()
         epoch_loss = 0
@@ -67,27 +67,25 @@ def train_net(net,
             optimizer.step()
             
         # save train results
-        # label = label.cpu().detach()
-        # mask = img.cpu().detach()[:,3:4,:,:]
-        # train_input = (label - label * (1 - mask))
-        # train_output = pred_label.cpu().detach()
-        # path = join(data_dir, 'samples/')
-        # save_img(label, path, epoch, 'train_gt.png')
-        # save_img(train_input, path, epoch, 'train_in.png')
-        # save_img(train_output, path, epoch, 'train_out.png')
+        if(epoch == 1 or epoch == 5 or epoch == 10 or epoch == 50 or epoch == 100) :                      
+            label = label.cpu().detach()
+            train_input = img.cpu().detach()[:,0:3,:,:]
+            train_output = pred_label.cpu().detach()
+            path = join(data_dir, 'samples/')
+            save_img(label, path, epoch, 'train_gt.png')
+            save_img(train_input, path, epoch, 'train_in.png')
+            save_img(train_output, path, epoch, 'train_out.png')
 
-        # perform test and save test results
-        # test_net(testNet=net, epoch = epoch, batch_size=1, gpu=args.gpu, data_dir=args.data_dir)
-        
-        # save net 
-        if((epoch + 1) % 10 == 0) :   
-            torch.save(net.state_dict(), join(data_dir, 'checkpoints/') + 'CP%d.pth' % (epoch + 1))
-            print('Checkpoint %d saved !' % (epoch + 1))
-        print('Epoch %d finished! - Loss: %.6f' % (epoch+1, epoch_loss / (i+1)))
+            # perform test and save test results
+            test_net(testNet=net, epoch = epoch, batch_size=1, gpu=args.gpu, data_dir=args.data_dir)
+            # save net          
+            torch.save(net.state_dict(), join(data_dir, 'checkpoints/') + 'CP%d.pth' % epoch)
+            print('Checkpoint %d saved !' % epoch)
+        print('Epoch %d finished! - Loss: %.6f' % (epoch, epoch_loss / (i+1)))
 
 # displays test images with original and predicted masks 
 def test_net(testNet, 
-            epoch=0,
+            epoch=1,
             batch_size=1,
             gpu=True,
             data_dir='data/'):
@@ -109,8 +107,7 @@ def test_net(testNet,
             if gpu:
                 img = Variable(img.cuda())
             pred_label = testNet(img)          
-            mask = img.cpu().detach()[:,3:4,:,:]
-            test_input = (label - label * (1 - mask))
+            test_input = img.cpu().detach()[:,0:3,:,:]
             test_output = pred_label.cpu().detach()
             path = join(data_dir, 'samples/')
 
@@ -132,13 +129,14 @@ def get_args():
     parser.add_option('-d', '--data-dir', dest='data_dir', default='data/', help='data directory')
     parser.add_option('-g', '--gpu', action='store_true', dest='gpu', default=True, help='use cuda')
     parser.add_option('-l', '--load', dest='load', default=False, help='load file model')
+    parser.add_option('-t', '--test_epoch', dest='test_epoch', default=100, type='int', help='test epoch')
 
     (options, args) = parser.parse_args()
     return options
 
 def save_img(image, path, epoch, image_name):
     plt.imshow(image[0].permute(1,2,0).numpy())
-    plt.savefig(path + '%d_' % (epoch + 1) + image_name)
+    plt.savefig(path + '%d_' % epoch + image_name)
     plt.close()
 
 if __name__ == '__main__':
@@ -164,12 +162,12 @@ if __name__ == '__main__':
     if WILL_TEST:
         testNet = UNet()
         net_folder = 'checkpoints/'
-        net_name = 'CP100'
+        net_name = 'CP'+str(args.test_epoch)
         state_dict = torch.load('data/' + net_folder + net_name + '.pth')
         testNet.load_state_dict(state_dict)
         testNet.cuda()
         test_net(testNet=testNet, 
-            epoch=100,
+            epoch=args.test_epoch,
             batch_size=1,
             gpu=args.gpu,
             data_dir=args.data_dir)
