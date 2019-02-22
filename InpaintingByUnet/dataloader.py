@@ -53,20 +53,20 @@ class DataLoader(Dataset):
             mask[:, offset_y : offset_y + hole_h, offset_x : offset_x + hole_w] = 0
         return mask
 
-# #Test dataloader
-# data_dir = 'data/train.png'
-# dataset_list = []
-# for i in range(16):
-#     dataset_list.append(data_dir)
-# train_dataset = DataLoader(dataset_list)
-# train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=False, num_workers=0)
-# for i, (img, label) in enumerate(train_loader):
-#     figs, axes = plt.subplots(1, 3)
-#     img_mask = img[:,0:3,:,:]
-#     mask = img[:,3:4,:,:]
-#     axes[0].imshow(img_mask[0].permute(1,2,0).numpy())   # show first 3 channel
-#     axes[1].imshow(mask[0].squeeze(0).numpy(), cmap=cm.gray) # show mask channel
-#     # axes[0].imshow(img[0].squeeze(0).numpy())
-#     axes[2].imshow(label[0].permute(1,2,0).numpy()) # show label
-#     plt.show()
-#     break
+if __name__ == '__main__':
+    data_dir = 'data/train.png'
+    dataset_list = []
+    for i in range(16):
+        dataset_list.append(data_dir)
+    train_dataset = DataLoader(dataset_list)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=16, shuffle=False, num_workers=0)
+    for i, (img, label) in enumerate(train_loader):
+        figs, axes = plt.subplots(1, 3)
+        img_mask = img[:,0:3,:,:]
+        mask = img[:,3:4,:,:]
+        axes[0].imshow(img_mask[0].permute(1,2,0).numpy())   # show first 3 channel
+        axes[1].imshow(mask[0].squeeze(0).numpy(), cmap=cm.gray) # show mask channel
+        # axes[0].imshow(img[0].squeeze(0).numpy())
+        axes[2].imshow(label[0].permute(1,2,0).numpy()) # show label
+        plt.show()
+        break
