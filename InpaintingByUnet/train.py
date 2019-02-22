@@ -10,7 +10,8 @@ import torch.nn as nn
 from torch import optim
 
 from torchvision import transforms
-
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from model import UNet
@@ -18,9 +19,6 @@ from dataloader import DataLoader
 
 from torch.autograd import Variable
 import torch.nn.functional as F
-
-WILL_TRAIN = True
-WILL_TEST = False
 
 def train_net(net,
               epochs = 3,
@@ -34,13 +32,10 @@ def train_net(net,
     for i in range(batch_size*100):
         train_list.append(train_path)
     train_dataset = DataLoader(train_list)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=0)    
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=False, num_workers=6)    
     print('Total training items', len(train_dataset), ', Total training mini-batches in one epoch:', len(train_loader))
 
-    optimizer = optim.SGD(net.parameters(),
-                            lr=lr,
-                            momentum=0.99,
-                            weight_decay=0.005)
+    optimizer = optim.Adam(net.parameters(),lr=lr)
 
     for epoch in range(1, epochs+1):
         print('Epoch %d/%d' % (epoch, epochs))
@@ -49,6 +44,7 @@ def train_net(net,
         epoch_loss = 0
 
         for i, (img, label) in enumerate(train_loader):
+            net.train()
             # todo: load image tensor to gpu
             if gpu:
                 img = Variable(img.cuda())
@@ -95,8 +91,8 @@ def test_net(testNet,
     for i in range(test_num):
         test_list.append(test_path)
     test_dataset = DataLoader(test_list)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=0)
-    print('Total testing items', len(test_dataset), ', Total testing mini-batches in one epoch:', len(test_loader))
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=6)
+    # print('Total testing items', len(test_dataset), ', Total testing mini-batches in one epoch:', len(test_loader))
 
     testNet.eval()
     # Open accuracy file
@@ -141,7 +137,8 @@ def save_img(image, path, epoch, image_name):
 
 if __name__ == '__main__':
     args = get_args()
-
+    WILL_TRAIN = False
+    WILL_TEST = True
     net = UNet()
 
     if args.load:
@@ -161,7 +158,7 @@ if __name__ == '__main__':
 
     if WILL_TEST:
         testNet = UNet()
-        net_folder = 'checkpoints/'
+        net_folder = 'checkpoints/100iters_mask1/'
         net_name = 'CP'+str(args.test_epoch)
         state_dict = torch.load('data/' + net_folder + net_name + '.pth')
         testNet.load_state_dict(state_dict)
