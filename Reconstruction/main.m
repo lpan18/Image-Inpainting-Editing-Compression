@@ -23,14 +23,14 @@ b = zeros(k+4, 1);
 %TODO: fill the elements in A and b, for each pixel in the image
 % vertical edges - V(2,1),V(3,1)...V(49,1), V(2,50),V(3,50)...V(49,50)
 idx1 = V(2,1); idx2 = V(imh-1,1);
-idx3 = V(2,50); idx4 = V(imh-1,50);
+idx3 = V(2,imw); idx4 = V(imh-1,imw);
 i = [idx1:idx2,idx1:idx2,idx1:idx2,idx3:idx4,idx3:idx4,idx3:idx4];
 j = [(idx1-1):(idx2-1),idx1:idx2,(idx1+1):(idx2+1),(idx3-1):(idx4-1),idx3:idx4,(idx3+1):(idx4+1)];
 v = [-ones(1,imh-2),2*ones(1,imh-2),-ones(1,imh-2),-ones(1,imh-2),2*ones(1,imh-2),-ones(1,imh-2)];
 
 % horizonal edges - V(1,2),V(1,3)...V(1,49),V(50,2),V(50,3)...V(50,49)
 idx1 = V(1,2); idx2 = V(1,imw-1);
-idx3 = V(50,2); idx4 = V(50,imw-1);
+idx3 = V(imh,2); idx4 = V(imh,imw-1);
 i = [i, idx1:imh:idx2,idx1:imh:idx2,idx1:imh:idx2,idx3:imh:idx4,idx3:imh:idx4,idx3:imh:idx4];
 j = [j, (idx1-imh):imh:(idx2-imh),idx1:imh:idx2,(idx1+imh):imh:(idx2+imh),(idx3-imh):imh:(idx4-imh),idx3:imh:idx4,(idx3+imh):imh:(idx4+imh)];
 v = [v, -ones(1,imw-2),2*ones(1,imw-2),-ones(1,imw-2),-ones(1,imw-2),2*ones(1,imw-2),-ones(1,imw-2)];
