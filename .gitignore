@@ -1,6 +1,12 @@
 __pycache__/
 data/
-**/img_s.bmp
-**/mask_s.bmp
-**/output.png
+images/
+outputs/
+*.bmp
+*.png
+*.jpg
+*.mat
 **/test.m
+*.asv
+.vs/
+**/dataloader_rgb.py

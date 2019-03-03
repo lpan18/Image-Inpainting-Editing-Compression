@@ -1,6 +1,5 @@
 # Image Inpainting + Image Editing + Image Compression    
 ---
-
 ### Image Inpainting By Resnet   
 Use the [resnet](https://arxiv.org/abs/1512.03385) deep learning to inpaint image.      
 run `InpaintingByResnet/train.py`   
