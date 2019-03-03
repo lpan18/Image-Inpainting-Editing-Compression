@@ -17,7 +17,6 @@ V(1:imh*imw) = 1:imh*imw;
 % the counter e represent the row of A matrix
 e = 0;
 k = imh*imw;
-% A = zeros(k+4, k);
 b = zeros(k+4, 1);
 
 %TODO: fill the elements in A and b, for each pixel in the image
@@ -75,10 +74,10 @@ b(e+4,1) = imgin(imh,imw);
 % b(e+2,1) = imgin(1,imw) + 0.3;
 % b(e+3,1) = imgin(imh,1) + 0.3;
 % b(e+4,1) = imgin(imh,imw) + 0.3;
-% % brighter on the left side
+% brighter on the left side
 % b(e+1,1) = imgin(1,1) + 0.3;
 % b(e+3,1) = imgin(imh,1) + 0.3;
-% % brighter on the bottom side
+% brighter on the bottom side
 % b(e+3,1) = imgin(imh,1) + 0.3;
 % b(e+4,1) = imgin(imh,imw) + 0.3;
 % brighter on right bottom corner
