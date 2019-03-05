@@ -33,28 +33,38 @@ for ch = 1:nb
     %      e.g., a total of h*w variables
     e = 0;
     b = zeros(m+m-k, 1); % m base equations + m-k constraints
+    num_v = (h-2)*2*3; % vertical edges 
+    num_h = (w-2)*2*3; % horizontal edges
+    num_in = (h-2)*(w-2)*5; % interior elements
+    num_of_i = num_v+num_h+num_in+m-k; % m-k contraints
+    i = zeros(1,num_of_i);
+    j = zeros(1,num_of_i);
+    v = zeros(1,num_of_i);
 
     %TODO: fill the elements in A and b, for each pixel in the image
     % vertical edges 
     idx1 = V(2,1); idx2 = V(h-1,1);
     idx3 = V(2,w); idx4 = V(h-1,w);
-    i = [idx1:idx2,idx1:idx2,idx1:idx2,idx3:idx4,idx3:idx4,idx3:idx4];
-    j = [(idx1-1):(idx2-1),idx1:idx2,(idx1+1):(idx2+1),(idx3-1):(idx4-1),idx3:idx4,(idx3+1):(idx4+1)];
-    v = [-ones(1,h-2),2*ones(1,h-2),-ones(1,h-2),-ones(1,h-2),2*ones(1,h-2),-ones(1,h-2)];
+    i(1:num_v) = [idx1:idx2,idx1:idx2,idx1:idx2,idx3:idx4,idx3:idx4,idx3:idx4];
+    j(1:num_v) = [(idx1-1):(idx2-1),idx1:idx2,(idx1+1):(idx2+1),(idx3-1):(idx4-1),idx3:idx4,(idx3+1):(idx4+1)];
+    v(1:num_v) = [-ones(1,h-2),2*ones(1,h-2),-ones(1,h-2),-ones(1,h-2),2*ones(1,h-2),-ones(1,h-2)];
 
     % horizonal edges 
     idx1 = V(1,2); idx2 = V(1,w-1);
     idx3 = V(h,2); idx4 = V(h,w-1);
-    i = [i, idx1:h:idx2,idx1:h:idx2,idx1:h:idx2,idx3:h:idx4,idx3:h:idx4,idx3:h:idx4];
-    j = [j, (idx1-h):h:(idx2-h),idx1:h:idx2,(idx1+h):h:(idx2+h),(idx3-h):h:(idx4-h),idx3:h:idx4,(idx3+h):h:(idx4+h)];
-    v = [v, -ones(1,w-2),2*ones(1,w-2),-ones(1,w-2),-ones(1,w-2),2*ones(1,w-2),-ones(1,w-2)];
+    i((num_v+1):(num_v+num_h)) = [idx1:h:idx2,idx1:h:idx2,idx1:h:idx2,idx3:h:idx4,idx3:h:idx4,idx3:h:idx4];
+    j((num_v+1):(num_v+num_h)) = [(idx1-h):h:(idx2-h),idx1:h:idx2,(idx1+h):h:(idx2+h),(idx3-h):h:(idx4-h),idx3:h:idx4,(idx3+h):h:(idx4+h)];
+    v((num_v+1):(num_v+num_h)) = [-ones(1,w-2),2*ones(1,w-2),-ones(1,w-2),-ones(1,w-2),2*ones(1,w-2),-ones(1,w-2)];
 
-    % inside elements
+    % interior elements
+    start_idx = num_v+num_h+1;
     for c = 2:w-1
         idx1 = V(2,c); idx2 = V(h-1,c);
-        i = [i, idx1:idx2,idx1:idx2,idx1:idx2,idx1:idx2,idx1:idx2];
-        j = [j, (idx1-h):(idx2-h),(idx1-1):(idx2-1),idx1:idx2,(idx1+1):(idx2+1),(idx1+h):(idx2+h)];
-        v = [v, -ones(1,h-2),-ones(1,h-2),4*ones(1,h-2),-ones(1,h-2),-ones(1,h-2)];
+        delta=(idx2-idx1+1)*5;
+        i(start_idx:(start_idx+delta-1)) = [idx1:idx2,idx1:idx2,idx1:idx2,idx1:idx2,idx1:idx2];
+        j(start_idx:(start_idx+delta-1)) = [(idx1-h):(idx2-h),(idx1-1):(idx2-1),idx1:idx2,(idx1+1):(idx2+1),(idx1+h):(idx2+h)];
+        v(start_idx:(start_idx+delta-1)) = [-ones(1,h-2),-ones(1,h-2),4*ones(1,h-2),-ones(1,h-2),-ones(1,h-2)];
+        start_idx = start_idx+delta;
     end
     
     % b matrix
@@ -86,10 +96,11 @@ for ch = 1:nb
                 continue;
             else   % outside the mask, change the target to T
                 e = e+1;
-                i = [i, e];
-                j = [j, V(r,c)];
-                v = [v,1];
+                i(start_idx) = e;
+                j(start_idx) = V(r,c);
+                v(start_idx) = 1;
                 b(e) = im_t(orig_r,orig_c,ch);
+                start_idx = start_idx+1;
             end
         end
     end
