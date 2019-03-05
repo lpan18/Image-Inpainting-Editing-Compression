@@ -2,11 +2,10 @@ __pycache__/
 data/
 images/
 outputs/
-*.bmp
+.vs/
+*.asv
+*.mat
 *.png
 *.jpg
-*.mat
-**/test.m
-*.asv
-.vs/
+*.bmp
 **/dataloader_rgb.py
