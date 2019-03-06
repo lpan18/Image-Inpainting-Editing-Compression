@@ -8,23 +8,43 @@ function imgout = poisson_blend(im_s, mask_s, im_t)
 
 [imh, imw, nb] = size(im_s); % imh = 432, w = 768, nb = 3
 % find all non-zero("1") values
-[row,col] = find(mask_s);
-k = size(row,1); % num of "1" values
-% use min and max to form a rectangular and expand 1 pixel in each direction
-h_min = min(row)-1; h_max = max(row)+1; 
-w_min = min(col)-1; w_max = max(col)+1;
-h = h_max-h_min;
-w = w_max-w_min;
+[rows,cols] = find(mask_s);
+k = size(rows,1); % num of "1" values
+
+% use min and max position to form a rectangular that includes the selected region and expand 1 pixel in each direction
+h_min = min(rows)-1; h_max = max(rows)+1; 
+w_min = min(cols)-1; w_max = max(cols)+1;
+h = h_max-h_min+1;
+w = w_max-w_min+1;
 
 V = zeros(h, w);
 V(1:h*w) = 1:h*w;
-% the total pixel nums of croped rectangular 
+% the total pixel nums of cropped rectangular 
 m = h*w;
 
+% find indices of outside neighbours of selected region
+num_outside = 0;
+outside_rows = zeros(1,(m-k));
+outside_cols = zeros(1,(m-k));
+for c = 1:w
+    for r = 1:h
+        orig_r = r+h_min-1;
+        orig_c = c+w_min-1;
+        % check if this pixel is a outside neighbour of selected region
+        if(mask_s(orig_r,orig_c)==0 && ((orig_r>=2 && mask_s(orig_r-1,orig_c)==1) || (orig_r<=imh-1 && mask_s(orig_r+1,orig_c)==1) || (orig_c>=2 && mask_s(orig_r,orig_c-1)==1) || (orig_c<=imw-1 && mask_s(orig_r,orig_c+1)==1)))
+           num_outside = num_outside+1; 
+           outside_rows(num_outside)=r;
+           outside_cols(num_outside)=c;
+        end
+    end
+end
+outside_rows = outside_rows(1:num_outside);
+outside_cols = outside_cols(1:num_outside);
+
 %TODO: consider different channel numbers
-solutions = zeros(m,3);
-errors = zeros(1,3);
-img_rects = zeros(h,w,3);
+solutions = zeros(m,nb);
+errors = zeros(1,nb);
+img_rects = zeros(h,w,nb);
 
 for ch = 1:nb
     %TODO: initialize counter, A (sparse matrix) and b.
@@ -32,16 +52,17 @@ for ch = 1:nb
     %      you can add useless variables for convenience,
     %      e.g., a total of h*w variables
     e = 0;
-    b = zeros(m+m-k, 1); % m base equations + m-k constraints
+    b = zeros(m+num_outside, 1); % cropped rectangular pixels + outside neighbouring constraints
     num_v = (h-2)*2*3; % vertical edges 
     num_h = (w-2)*2*3; % horizontal edges
     num_in = (h-2)*(w-2)*5; % interior elements
-    num_of_i = num_v+num_h+num_in+m-k; % m-k contraints
+    num_of_i = num_v+num_h+num_in+num_outside; % outside neighbouring constraints
     i = zeros(1,num_of_i);
     j = zeros(1,num_of_i);
     v = zeros(1,num_of_i);
 
     %TODO: fill the elements in A and b, for each pixel in the image
+    % reconstruct image (cropped rectangular)
     % vertical edges 
     idx1 = V(2,1); idx2 = V(h-1,1);
     idx3 = V(2,w); idx4 = V(h-1,w);
@@ -86,23 +107,18 @@ for ch = 1:nb
     end
     
     %TODO: add extra constraints (if any)
-    ind = 1;
-    for c = 1:w
-        for r = 1:h
-            orig_r = r+h_min-1;
-            orig_c = c+w_min-1;
-            if(ind<=k && orig_r==row(ind) && orig_c==col(ind)) % inside the mask, do nothing 
-                ind = ind+1;
-                continue;
-            else   % outside the mask, change the target to T
-                e = e+1;
-                i(start_idx) = e;
-                j(start_idx) = V(r,c);
-                v(start_idx) = 1;
-                b(e) = im_t(orig_r,orig_c,ch);
-                start_idx = start_idx+1;
-            end
-        end
+    % constraints : the outside neighbouring pixels are constant defined by target
+    for idx = 1:num_outside
+        r = outside_rows(idx);
+        c = outside_cols(idx);
+        orig_r = r+h_min-1;
+        orig_c = c+w_min-1;
+        e = e+1;
+        i(start_idx) = e;
+        j(start_idx) = V(r,c);
+        v(start_idx) = 1;
+        b(e) = im_t(orig_r,orig_c,ch);
+        start_idx = start_idx+1;
     end
     A = sparse(i,j,v);
 
@@ -114,8 +130,7 @@ for ch = 1:nb
 
     img_rects(:,:,ch) = reshape(solutions(:,ch),[h,w]);
 end
-
-imshow(img_rects)
+% imshow(img_rects)
 
 %TODO: copy those variable pixels to the appropriate positions
 %      in the output image to obtain the blended image
@@ -125,7 +140,8 @@ for c = 1:w
     for r = 1:h
         orig_r = r+h_min-1;
         orig_c = c+w_min-1;
-        if(ind<=k && orig_r==row(ind) && orig_c==col(ind)) 
+        % replace the mask pixels
+        if(ind<=k && orig_r==rows(ind) && orig_c==cols(ind)) 
             imgout(orig_r,orig_c,:) = img_rects(r,c,:);
             ind = ind+1;
         end

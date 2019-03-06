@@ -3,8 +3,8 @@ clear;
 close all;
 
 im_background = im2double(imread('images/background.jpg'));
-im_object = im2double(imread('images/target.jpg'));
- 
+im_object = im2double(imread('images/target2.jpg'));
+
 % get source region mask from the user
 objmask = get_mask(im_object);
 
@@ -16,5 +16,5 @@ disp('start');
 im_blend = poisson_blend(im_s, mask_s, im_background);
 disp('end');
 
-imwrite(im_blend,['outputs/output',datestr(now,30),'.png']);
+imwrite(im_blend,['images/outputs/output',datestr(now,30),'.png']);
 figure(), hold off, imshow(im_blend);
