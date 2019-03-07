@@ -1,4 +1,4 @@
-% Binary Haar Wavelet Decomposition and Reconstruction
+% Integer Haar Wavelet Decomposition and Reconstruction
 clear all;
 close all;
 clc;
@@ -8,10 +8,10 @@ I = imread([filename,'.jpg']);
 if(ndims(I)==3)
     I = rgb2gray(I);
 end
-I = im2double(I);
+I = double(I); % in matlab
 [rows,cols] = size(I);
 n = log2(rows);
-level = 3; % iteration times
+level = 1; % iteration times
 
 % decompostion
 img_decomp = I;
@@ -20,8 +20,8 @@ for i = 1:level
     img_decomp=[CC,DC;CD,DD];
 end
 figure;
-imshow(img_decomp);
-imwrite(img_decomp,['results/',filename,'_bin_haar_decomp_',num2str(level),'.png']);
+imshow(img_decomp/255);
+imwrite(img_decomp/255,['results/',filename,'_int_haar_decomp_',num2str(level),'.png']);
 
 % reconstruction
 img_recon = img_decomp;
@@ -34,8 +34,8 @@ for i = 1:level
     img_recon = haar_2D_recon(CC,DC,CD,DD);
 end
 figure;
-imshow(img_recon);
-imwrite(img_recon,['results/',filename,'_bin_haar_recon_',num2str(level),'.png']);
+imshow(img_recon/255);
+imwrite(img_recon/255,['results/',filename,'_int_haar_recon_',num2str(level),'.png']);
 
 % decomposition 1D function
 function [C,D] = haar_1D_decomp(img)  
@@ -43,8 +43,8 @@ function [C,D] = haar_1D_decomp(img)
     C = zeros(1,n/2);
     D = zeros(1,n/2);
     for i=1:n/2
-        C(i) = (img(2*i-1)+img(2*i))/2;
-        D(i) = (img(2*i-1)-img(2*i))/2;
+        C(i) = floor((img(2*i-1)+img(2*i))/2);
+        D(i) = img(2*i-1)-img(2*i);
     end
 end
 
@@ -70,8 +70,8 @@ function img_1D_recon = haar_1D_recon(C,D)
     n = length(C);
     img_1D_recon = zeros(1,2*n);
     for i=1:n
-        img_1D_recon(2*i-1) = C(i)+D(i);
-        img_1D_recon(2*i) = C(i)-D(i);
+        img_1D_recon(2*i) = C(i)-floor(D(i)/2);
+        img_1D_recon(2*i-1) = D(i)+img_1D_recon(2*i);
     end
 end
 
@@ -88,12 +88,3 @@ function img_2D_recon = haar_2D_recon(CC,DC,CD,DD)
         img_2D_recon(rows+row,:) = haar_1D_recon(img_2D_recon(rows+row,1:cols),img_2D_recon(rows+row,(cols+1):2*cols)); 
     end
 end
-
-%     i = [1:n/2,1:n/2];
-%     j = [1:2:(n-1),2:2:n];
-%     vA = 0.5*ones(1,n);
-%     vB = [0.5*ones(1,n/2), -0.5*ones(1,n/2)];
-%     A = sparse(i,j,vA);
-%     B = sparse(i,j,vB);
-%     C = img*A';
-%     D = img*B';
