@@ -21,4 +21,7 @@ Implement image compression using singular value decomposition.
 run `SVD/main.m`   
 
 ### Wavelet Image Compression   
-Implement image compression using Haar wavelet.    
+Implement Binary Haar wavelet, Integer Haar wavelet and Integer Ternary Haar wavelet.    
+Binary Haar wavelet: `WaveletCompression/bin_haar.m`    
+Integer Haar wavelet: `WaveletCompression/int_haar.m` 
+Integer Ternary Haar wavelet: `WaveletCompression/int_terna_haar.m` 
