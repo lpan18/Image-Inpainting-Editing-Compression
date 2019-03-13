@@ -11,7 +11,7 @@ end
 I = im2double(I);
 [rows,cols] = size(I);
 n = log2(rows);
-level = 3; % iteration times
+level = 1; % iteration times
 
 % decompostion
 img_decomp = I;
@@ -20,8 +20,8 @@ for i = 1:level
     img_decomp=[CC,DC;CD,DD];
 end
 figure;
-imshow(img_decomp);
-imwrite(img_decomp,['results/',filename,'_bin_haar_decomp_',num2str(level),'.png']);
+imshow(img_decomp+0.5);
+imwrite(img_decomp+0.5,['results/',filename,'_bin_haar_decomp_',num2str(level),'.png']);
 
 % reconstruction
 img_recon = img_decomp;
@@ -88,12 +88,3 @@ function img_2D_recon = haar_2D_recon(CC,DC,CD,DD)
         img_2D_recon(rows+row,:) = haar_1D_recon(img_2D_recon(rows+row,1:cols),img_2D_recon(rows+row,(cols+1):2*cols)); 
     end
 end
-
-%     i = [1:n/2,1:n/2];
-%     j = [1:2:(n-1),2:2:n];
-%     vA = 0.5*ones(1,n);
-%     vB = [0.5*ones(1,n/2), -0.5*ones(1,n/2)];
-%     A = sparse(i,j,vA);
-%     B = sparse(i,j,vB);
-%     C = img*A';
-%     D = img*B';

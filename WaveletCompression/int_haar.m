@@ -20,8 +20,8 @@ for i = 1:level
     img_decomp=[CC,DC;CD,DD];
 end
 figure;
-imshow(img_decomp/255);
-imwrite(img_decomp/255,['results/',filename,'_int_haar_decomp_',num2str(level),'.png']);
+imshow(img_decomp/255+0.5);
+imwrite(img_decomp/255+0.5,['results/',filename,'_int_haar_decomp_',num2str(level),'.png']);
 
 % reconstruction
 img_recon = img_decomp;
