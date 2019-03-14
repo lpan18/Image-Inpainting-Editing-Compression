@@ -68,9 +68,18 @@ def train_net(net,
             train_input = img.cpu().detach()[:,0:3,:,:]
             train_output = pred_label.cpu().detach()
             path = join(data_dir, 'samples/')
-            save_img(label, path, epoch, 'train_gt.png')
-            save_img(train_input, path, epoch, 'train_in.png')
-            save_img(train_output, path, epoch, 'train_out.png')
+            plt.figure()
+            plt.subplot(1,3,1)
+            plt.imshow(label)
+            plt.subplot(1,3,2)
+            plt.imshow(train_input)
+            plt.subplot(1,3,3)
+            plt.imshow(train_output)
+            plt.savefig(path + '%d_' % epoch + '_train.png')
+
+            # save_img(label, path, epoch, 'train_gt.png')
+            # save_img(train_input, path, epoch, 'train_in.png')
+            # save_img(train_output, path, epoch, 'train_out.png')
 
             # perform test and save test results
             test_net(testNet=net, epoch = epoch, batch_size=1, gpu=args.gpu, data_dir=args.data_dir)
@@ -105,9 +114,17 @@ def test_net(testNet,
             path = join(data_dir, 'samples/')
 
             # save test_groundtruth, test_input, test_output
-            save_img(label, path, epoch, 'test_gt.png')
-            save_img(test_input, path, epoch, 'test_in.png')
-            save_img(test_output, path, epoch, 'test_out.png')
+            plt.figure()
+            plt.subplot(1,3,1)
+            plt.imshow(label)
+            plt.subplot(1,3,2)
+            plt.imshow(test_input)
+            plt.subplot(1,3,3)
+            plt.imshow(test_output)
+            plt.savefig(path + '%d_' % epoch + '_test.png')
+            # save_img(label, path, epoch, 'test_gt.png')
+            # save_img(test_input, path, epoch, 'test_in.png')
+            # save_img(test_output, path, epoch, 'test_out.png')
 
 def get_args():
     parser = OptionParser()
@@ -121,10 +138,10 @@ def get_args():
     (options, args) = parser.parse_args()
     return options
 
-def save_img(image, path, epoch, image_name):
-    plt.imshow(image[0].permute(1,2,0).numpy())
-    plt.savefig(path + '%d_' % epoch + image_name)
-    plt.close()
+# def save_img(image, path, epoch, image_name):
+#     plt.imshow(image[0].permute(1,2,0).numpy())
+#     plt.savefig(path + '%d_' % epoch + image_name)
+#     plt.close()
 
 if __name__ == '__main__':
     args = get_args()
