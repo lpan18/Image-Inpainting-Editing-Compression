@@ -11,7 +11,7 @@ from torch import optim
 
 from torchvision import transforms
 import matplotlib
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from model import ResNet
@@ -95,9 +95,6 @@ def test_net(testNet,
     # print('Total testing items', len(test_dataset), ', Total testing mini-batches in one epoch:', len(test_loader))
 
     testNet.eval()
-    # Open accuracy file
-    # f = open(data_dir + net_folder + 'accuracy.txt', 'a')
-    # f.write(net_name+'\n')
     with torch.no_grad():
         for i, (img, label) in enumerate(test_loader):
             if gpu:
@@ -111,12 +108,6 @@ def test_net(testNet,
             save_img(label, path, epoch, 'test_gt.png')
             save_img(test_input, path, epoch, 'test_in.png')
             save_img(test_output, path, epoch, 'test_out.png')
-
-            # compute accuracy and write to file
-            # N = label.shape[0] * label.shape[1]
-            # accuracy = np.sum(label == pred_label) / N
-            # f.write(str(i) + ' ' + str(accuracy) + '\n')                
-        # f.close()
 
 def get_args():
     parser = OptionParser()
@@ -137,8 +128,8 @@ def save_img(image, path, epoch, image_name):
 
 if __name__ == '__main__':
     args = get_args()
-    WILL_TRAIN = False
-    WILL_TEST = True
+    WILL_TRAIN = True
+    WILL_TEST = False
     net = ResNet()
 
     if args.load:
@@ -158,7 +149,7 @@ if __name__ == '__main__':
 
     if WILL_TEST:
         testNet = ResNet()
-        net_folder = 'checkpoints/100iters_mask/'
+        net_folder = 'checkpoints/100iters_mask_Adam/'
         net_name = 'CP'+str(args.test_epoch)
         state_dict = torch.load('data/' + net_folder + net_name + '.pth')
         testNet.load_state_dict(state_dict)
