@@ -68,6 +68,7 @@ def train_net(net,
             train_input = img.cpu().detach()[:,0:3,:,:]
             train_output = pred_label.cpu().detach()
             path = join(data_dir, 'samples/')
+            
             plt.figure()
             plt.subplot(1,3,1)
             plt.imshow(label)
