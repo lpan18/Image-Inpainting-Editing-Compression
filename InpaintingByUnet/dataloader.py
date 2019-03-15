@@ -27,7 +27,7 @@ class DataLoader(Dataset):
             transforms.RandomHorizontalFlip(),
             transforms.RandomVerticalFlip(),
             transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1),
-            transforms.RandomRotation(5),
+            transforms.RandomRotation(180),
             transforms.RandomResizedCrop(resized_size,scale=(0.14, 0.17)),
             transforms.ToTensor()   # transforms the image to a tensor with range [0,1].
         ])

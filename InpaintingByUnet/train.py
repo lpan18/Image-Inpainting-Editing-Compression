@@ -71,12 +71,12 @@ def train_net(net,
 
             plt.figure()
             plt.subplot(1,3,1)
-            plt.imshow(label)
+            plt.imshow(label[0].permute(1,2,0).numpy())
             plt.subplot(1,3,2)
-            plt.imshow(train_input)
+            plt.imshow(train_input[0].permute(1,2,0).numpy())
             plt.subplot(1,3,3)
-            plt.imshow(train_output)
-            plt.savefig(path + '%d_' % epoch + '_train.png')
+            plt.imshow(train_output[0].permute(1,2,0).numpy())
+            plt.savefig(path + '%d_' % epoch + 'train.png')
 
             # save_img(label, path, epoch, 'train_gt.png')
             # save_img(train_input, path, epoch, 'train_in.png')
@@ -117,12 +117,12 @@ def test_net(testNet,
             # save test_groundtruth, test_input, test_output
             plt.figure()
             plt.subplot(1,3,1)
-            plt.imshow(label)
+            plt.imshow(label[0].permute(1,2,0).numpy())
             plt.subplot(1,3,2)
-            plt.imshow(test_input)
+            plt.imshow(test_input[0].permute(1,2,0).numpy())
             plt.subplot(1,3,3)
-            plt.imshow(test_output)
-            plt.savefig(path + '%d_' % epoch + '_test.png')
+            plt.imshow(test_output[0].permute(1,2,0).numpy())
+            plt.savefig(path + '%d_' % epoch + 'test.png')
 
             # save_img(label, path, epoch, 'test_gt.png')
             # save_img(test_input, path, epoch, 'test_in.png')
@@ -140,10 +140,10 @@ def get_args():
     (options, args) = parser.parse_args()
     return options
 
-def save_img(image, path, epoch, image_name):
-    plt.imshow(image[0].permute(1,2,0).numpy())
-    plt.savefig(path + '%d_' % epoch + image_name)
-    plt.close()
+# def save_img(image, path, epoch, image_name):
+#     plt.imshow(image[0].permute(1,2,0).numpy())
+#     plt.savefig(path + '%d_' % epoch + image_name)
+#     plt.close()
 
 if __name__ == '__main__':
     args = get_args()
