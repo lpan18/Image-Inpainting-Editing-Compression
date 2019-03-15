@@ -1,8 +1,7 @@
 clc;
 clear;
 close all;
-
-imgin = im2double(imread('./target.jpg'));
+imgin = im2double(imread('./target1.jpg'));
 [imh, imw, nb] = size(imgin);
 assert(nb==1);
 % the image is grayscale
@@ -86,14 +85,21 @@ b(e+4,1) = imgin(imh,imw);
 
 % brighter on the left side
 % b(e+1,1) = imgin(1,1) + 0.3;
+% b(e+2,1) = imgin(1,imw);
 % b(e+3,1) = imgin(imh,1) + 0.3;
+% b(e+4,1) = imgin(imh,imw);
 
 % brighter on the bottom side
+% b(e+1,1) = imgin(1,1);
+% b(e+2,1) = imgin(1,imw);
 % b(e+3,1) = imgin(imh,1) + 0.3;
 % b(e+4,1) = imgin(imh,imw) + 0.3;
 
 % brighter on right bottom corner
-b(e+4,1) = imgin(imh,imw) + 0.3;
+% b(e+1,1) = imgin(1,1);
+% b(e+2,1) = imgin(1,imw);
+% b(e+3,1) = imgin(imh,1);
+% b(e+4,1) = imgin(imh,imw) + 0.3;
 
 %TODO: solve the equation
 %use "lscov" or "\", please google the matlab documents
@@ -101,48 +107,5 @@ solution = A\b;
 error = sum(abs(A*solution-b));
 disp(error);
 imgout = reshape(solution,[imh,imw]);
-imwrite(imgout,'output_right_bottom.png');
+imwrite(imgout,'output.png');
 figure(), hold off, imshow(imgout);
-
-
-
-
-% another solution not using sparse function
-% e = 0;
-% k = imh*imw;
-% A = zeros(k+4, k);
-% b = zeros(k+4, 1);
-% for c = 1:imw
-%     for r = 1:imh
-%         e = e+1;
-%         idx = V(r,c); 
-%         if((r==1&&c==1)||(r==1&&c==imw)||(r==imh&&c==1)||(r==imh&&c==imw))
-%             continue;
-%         elseif(r==1 || r==imh)
-%             A(e,idx) = 2;
-%             A(e,idx-imh) = -1;
-%             A(e,idx+imh) = -1;
-%             b(e) = 2*imgin(r,c)-imgin(r,c-1)-imgin(r,c+1);
-%         elseif(c==1 || c==imw)
-%             A(e,idx) = 2;
-%             A(e,idx-1) = -1;
-%             A(e,idx+1) = -1;
-%             b(e) = 2*imgin(r,c)-imgin(r-1,c)-imgin(r+1,c);
-%         else    
-%             A(e,idx) = 4;
-%             A(e,idx-1) = -1;
-%             A(e,idx+1) = -1;
-%             A(e,idx-imh) = -1;
-%             A(e,idx+imh) = -1;            
-%             b(e) = 4*imgin(r,c)-imgin(r,c-1)-imgin(r,c+1)-imgin(r-1,c)-imgin(r+1,c);
-%         end
-%     end
-% end
-% A(e+1,1) = 1;
-% b(e+1,1) = imgin(1,1);
-% A(e+2,V(1,imw)) = V(1,imw);
-% b(e+2,1) = imgin(1,imw);
-% A(e+3,V(imh,1)) = V(imh,1);
-% b(e+3,1) = imgin(imh,1);
-% A(e+4,V(imh,imw)) = V(imh,imw);
-% b(e+4,1) = imgin(imh,imw);

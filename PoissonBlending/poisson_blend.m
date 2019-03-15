@@ -5,7 +5,6 @@ function imgout = poisson_blend(im_s, mask_s, im_t)
 % im_t     target image (background)
 % -----Output
 % imgout   the blended image
-
 [imh, imw, nb] = size(im_s); % imh = 432, w = 768, nb = 3
 % find all non-zero values
 [rows,cols] = find(mask_s);
@@ -93,10 +92,10 @@ for ch = 1:nb
             b(kk) = b(kk) + im_s(r,c,ch)*self;
         end
     end
-
     i = i(1:e);
     j = j(1:e);
     v = v(1:e);
+    
     A = sparse(i,j,v);
     
     %TODO: add extra constraints (if any)

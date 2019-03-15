@@ -122,7 +122,7 @@ def test_net(testNet,
             plt.imshow(test_input[0].permute(1,2,0).numpy())
             plt.subplot(1,3,3)
             plt.imshow(test_output[0].permute(1,2,0).numpy())
-            plt.savefig(path + '%d_' % epoch + 'test.png')
+            plt.savefig(path + '%d_' % epoch + 'test_' + str(i) + '.png')
 
             # save_img(label, path, epoch, 'test_gt.png')
             # save_img(test_input, path, epoch, 'test_in.png')
@@ -147,8 +147,8 @@ def get_args():
 
 if __name__ == '__main__':
     args = get_args()
-    WILL_TRAIN = True
-    WILL_TEST = False
+    WILL_TRAIN = False
+    WILL_TEST = True
     net = UNet()
 
     if args.load:
@@ -168,7 +168,7 @@ if __name__ == '__main__':
 
     if WILL_TEST:
         testNet = UNet()
-        net_folder = 'checkpoints/100iters_mask_Adam/'
+        net_folder = 'checkpoints/'
         net_name = 'CP'+str(args.test_epoch)
         state_dict = torch.load('data/' + net_folder + net_name + '.pth')
         testNet.load_state_dict(state_dict)

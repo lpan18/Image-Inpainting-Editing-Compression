@@ -11,7 +11,7 @@ end
 I = double(I); % in matlab 
 I = imcrop(I,[134 134 242 242]); % crop image to be 243*243
 [rows,cols] = size(I);
-level = 1; % iteration times
+level = 2; % iteration times
 
 % decompostion
 img_decomp = I;
@@ -31,6 +31,9 @@ end
 figure;
 imshow(img_recon/255);
 imwrite(img_recon/255,['results/',filename,'_int_terna_haar_recon_',num2str(level),'.png']);
+
+error = sum(sum(abs(I-img_recon)));
+disp(error);
 
 % decomposition 1D function
 function img_1D_decomp = haar_1D_decomp(img)  

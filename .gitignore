@@ -9,5 +9,5 @@ results/
 *.png
 *.jpg
 *.bmp
-test.m
-**/dataloader_rgb.py
+*.pdf
+*.docx

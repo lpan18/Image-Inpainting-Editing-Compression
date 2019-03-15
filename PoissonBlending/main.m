@@ -2,8 +2,8 @@ clc;
 clear;
 close all;
 
-im_background = im2double(imread('images/background.jpg'));
-im_object = im2double(imread('images/target.jpg'));
+im_background = im2double(imread('images/bg1.jpg'));
+im_object = im2double(imread('images/tg1.jpg'));
 
 % get source region mask from the user
 objmask = get_mask(im_object);
